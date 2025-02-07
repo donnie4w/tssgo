@@ -11,34 +11,45 @@ import (
 	"github.com/donnie4w/tssgo/stub"
 )
 
-type tx struct {
+type tsstx struct {
 	account  string
 	password string
 	domain   string
 }
 
-func (ts *tx) ping() []byte {
+func (tt *tsstx) ping() []byte {
 	buf := buffer.NewBuffer()
 	buf.WriteByte(byte(ADMPING))
 	return buf.Bytes()
 }
 
-func (ts *tx) login() []byte {
+func (tt *tsstx) login() []byte {
 	buf := buffer.NewBuffer()
 	buf.WriteByte(byte(ADMAUTH))
 	ab := stub.NewAuthBean()
-	ab.Domain = &ts.domain
-	ab.Username = &ts.account
-	ab.Password = &ts.password
+	ab.Domain = &tt.domain
+	ab.Username = &tt.account
+	ab.Password = &tt.password
 	buf.Write(thrift.TEncode(ab))
 	return buf.Bytes()
 }
 
-func (ts *tx) subonline() []byte {
+func (tt *tsstx) subonline() []byte {
 	buf := buffer.NewBuffer()
 	buf.WriteByte(byte(ADMSUB))
 	ab := stub.NewAdmSubBean()
 	ab.SubType = &SUB_ONLINE
 	buf.Write(thrift.TEncode(ab))
+	return buf.Bytes()
+}
+
+func (tt *tsstx) bigbinaryStream(vnode, fnode string, body []byte) []byte {
+	buf := buffer.NewBufferWithCapacity(3 + len(vnode) + len(fnode) + len(body))
+	buf.WriteByte(byte(BIGBINARYSTREAM))
+	buf.WriteString(vnode)
+	buf.WriteByte(SEP_BIN)
+	buf.WriteString(fnode)
+	buf.WriteByte(SEP_BIN)
+	buf.Write(body)
 	return buf.Bytes()
 }
